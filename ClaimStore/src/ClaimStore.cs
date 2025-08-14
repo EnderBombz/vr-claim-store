@@ -8,17 +8,73 @@ namespace ClaimStore.src
 {
     public class ClaimStore : ModSystem
     {
+        private int BlocksPerUnit = 5000;
+        private int PricePerUnit = 3;
+        private ICoreServerAPI serverApi;
+
+
 
         public override void StartServerSide(ICoreServerAPI api)
         {
             base.StartServerSide(api);
+
+            serverApi = api;
+
+            // Lê o config.json
+            var config = api.LoadModConfig<ClaimStoreConfig>("config.json");
+            if (config == null)
+            {
+                config = new ClaimStoreConfig();
+                api.StoreModConfig(config, "config.json");
+            }
+
+            BlocksPerUnit = config.BlocksPerUnit;
+            PricePerUnit = config.PricePerUnit;
+
+            //CHAT COMMANDS
+
             api.ChatCommands
-               .Create("buyclaim")
-               .WithDescription("Compra blocos de claim usando engrenagens enferrujadas")
-               .RequiresPrivilege("areamodify")
-               .RequiresPlayer()
-               .WithArgs(api.ChatCommands.Parsers.Int("quantidade"))
-               .HandleWith(OnBuyClaimCommand);
+                 .Create("claimstore")
+                 .WithDescription("💰 ClaimStore Mod Commands 💰")
+                 .RequiresPlayer()
+                 .RequiresPrivilege("areamodify")
+                 .BeginSubCommand("buy")
+                     .WithDescription("Permite a compra de claim usando engrenagens enferrujadas")
+                     .RequiresPrivilege("areamodify")
+                     .RequiresPlayer()
+                     .WithArgs(api.ChatCommands.Parsers.Int("quantidade"))
+                     .HandleWith(OnBuyClaimCommand)
+                 .EndSubCommand()
+                 .BeginSubCommand("set")
+                     .WithDescription("Configura preço e blocos por unidade (admin)")
+                     .RequiresPrivilege("controlserver")
+                     .WithArgs(api.ChatCommands.Parsers.Int("blocksPerUnit"), api.ChatCommands.Parsers.Int("pricePerUnit"))
+                     .HandleWith(OnConfigCommand)
+                 .EndSubCommand()
+                 .BeginSubCommand("stats")
+                     .WithDescription("Mostra as configurações atuais")
+                     .RequiresPrivilege("areamodify")
+                     .HandleWith(OnConfigStatsCommand)
+                 .EndSubCommand();
+        }
+
+
+        private TextCommandResult OnConfigStatsCommand(TextCommandCallingArgs args)
+        {
+            return TextCommandResult.Success(
+                $"Blocos por unidade: {BlocksPerUnit}, Preço por unidade: {PricePerUnit} engrenagens."
+            );
+        }
+
+        private TextCommandResult OnConfigCommand(TextCommandCallingArgs args)
+        {
+            BlocksPerUnit = (int)args[0];
+            PricePerUnit = (int)args[1];
+
+            // Salva no arquivo
+            serverApi.StoreModConfig(new ClaimStoreConfig { BlocksPerUnit = BlocksPerUnit, PricePerUnit = PricePerUnit }, "config.json");
+
+            return TextCommandResult.Success($"Configuração atualizada: {BlocksPerUnit} blocos por {PricePerUnit} engrenagens.");
         }
 
         private int CountGearsInInventory(IInventory inv)
@@ -70,7 +126,8 @@ namespace ClaimStore.src
         {
             IServerPlayer player = args.Caller.Player as IServerPlayer;
 
-            int quantidade = (int)args[0]; int engrenagensNecessarias = (int)Math.Ceiling(quantidade / 5000.0) * 3;
+            int quantidade = (int)args[0];
+            int engrenagensNecessarias = (int)Math.Ceiling((quantidade / (double)BlocksPerUnit) * PricePerUnit);
             int engrenagensNoInventario = CountGears(player);
             if (engrenagensNoInventario < engrenagensNecessarias)
             {

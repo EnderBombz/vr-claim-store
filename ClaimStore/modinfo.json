@@ -6,8 +6,9 @@
     "EnderBombz"
   ],
   "description": "Expand your claim using gears!",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "dependencies": {
     "game": ""
-  }
+  },
+  "side": "Server"
 }
