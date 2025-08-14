@@ -1,0 +1,13 @@
+{
+  "type": "code",
+  "modid": "claimstore",
+  "name": "Claim Store",
+  "authors": [
+    "EnderBombz"
+  ],
+  "description": "Expand your claim using gears!",
+  "version": "0.0.1",
+  "dependencies": {
+    "game": ""
+  }
+}
