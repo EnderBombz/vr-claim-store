@@ -1,4 +1,5 @@
 {
   "BlocksPerUnit": 5000,
-  "PricePerUnit": 3
+  "PricePerUnit": 3,
+  "PriceByArea": 50
 }

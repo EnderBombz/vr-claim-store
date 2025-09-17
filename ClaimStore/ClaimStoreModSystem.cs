@@ -8,7 +8,7 @@ namespace ClaimStore
     public class ClaimStoreModSystem : ModSystem
     {
 
-        // Called on server and client
+        // Called on server and client 
         // Useful for registering block/entity classes on both sides
         public override void Start(ICoreAPI api)
         {
